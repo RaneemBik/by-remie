@@ -1,0 +1,35 @@
+# Optional: one-click deploy blueprint for https://render.com
+# The site and the API run in ONE Node service (needed for admin invitation emails).
+services:
+  - type: web
+    name: by-remie
+    runtime: node
+    plan: starter
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: VITE_INSTAGRAM_URL
+        sync: false
+      - key: VITE_WHATSAPP_NUMBER
+        sync: false
