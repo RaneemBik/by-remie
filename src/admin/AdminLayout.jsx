@@ -12,6 +12,7 @@ export default function AdminLayout() {
     <>
       <nav className="flex-1 p-3 sm:p-4 space-y-1">
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/dashboard" end className={linkClass}><LayoutGrid className="w-4 h-4" /> Overview</NavLink>
+        <NavLink onClick={() => setSidebarOpen(false)} to="/admin/hero" className={linkClass}><Star className="w-4 h-4" /> Hero</NavLink>
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/products" className={linkClass}><Package className="w-4 h-4" /> Products</NavLink>
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/categories" className={linkClass}><Tags className="w-4 h-4" /> Categories</NavLink>
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/featured" className={linkClass}><Star className="w-4 h-4" /> Featured</NavLink>

@@ -11,6 +11,7 @@ import ProductDetail from "./pages/ProductDetail";
 import AdminLogin from "./admin/AdminLogin";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./admin/AdminDashboard";
+import AdminHero from "./admin/AdminHero";
 import AdminProducts from "./admin/AdminProducts";
 import AdminCategories from "./admin/AdminCategories";
 import AdminFeatured from "./admin/AdminFeatured";
@@ -45,6 +46,7 @@ export default function App() {
               }
             >
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="hero" element={<AdminHero />} />
               <Route path="products" element={<AdminProducts />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="featured" element={<AdminFeatured />} />

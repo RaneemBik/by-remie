@@ -71,7 +71,6 @@ function emailTemplate({ heading, lines, buttonLabel, link }) {
       <p style="margin: 24px 0;">
         <a href="${safeLink}" style="display: inline-block; background: #352820; color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 999px; font-weight: 600;">${buttonLabel}</a>
       </p>
-      <p style="font-size: 13px; color: #7a6a60;">If the button does not work, copy and open this link:<br /><a href="${safeLink}">${safeLink}</a></p>
       <p style="font-size: 13px; color: #7a6a60;">This link can be used once and expires soon. If you weren't expecting this email, you can ignore it.</p>
     </div>`;
 }

@@ -78,7 +78,48 @@ revoke all on public.admin_users from anon;
 revoke insert, update, delete on public.admin_users from authenticated;
 
 -- ---------------------------------------------------------------------
--- 2) categories
+-- 2) site settings
+-- ---------------------------------------------------------------------
+drop table if exists public.site_settings cascade;
+
+create table public.site_settings (
+  id          text primary key default 'main',
+  hero_mode   text not null default 'default' check (hero_mode in ('default', 'video')),
+  hero_videos text[] not null default '{}',
+  updated_at  timestamptz not null default now()
+);
+
+create trigger site_settings_updated_at before update on public.site_settings
+  for each row execute function public.set_updated_at();
+
+alter table public.site_settings enable row level security;
+
+drop policy if exists "site settings public read" on public.site_settings;
+drop policy if exists "site settings admin write" on public.site_settings;
+drop policy if exists "site settings admin update" on public.site_settings;
+
+create policy "site settings public read"
+  on public.site_settings for select
+  to anon, authenticated
+  using (true);
+
+create policy "site settings admin write"
+  on public.site_settings for insert
+  to authenticated
+  with check (public.is_active_admin());
+
+create policy "site settings admin update"
+  on public.site_settings for update
+  to authenticated
+  using (public.is_active_admin())
+  with check (public.is_active_admin());
+
+insert into public.site_settings (id, hero_mode, hero_videos)
+values ('main', 'default', '{}')
+on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------
+-- 3) categories
 -- ---------------------------------------------------------------------
 create table if not exists public.categories (
   id          uuid primary key default gen_random_uuid(),
@@ -161,12 +202,12 @@ revoke insert, update, delete on public.products   from anon;
 -- 5) Storage bucket for product photos (public read, admin-only write)
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('product-images', 'product-images', true, 5242880,
-        array['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+values ('product-images', 'product-images', true, 52428800,
+        array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'])
 on conflict (id) do update
   set public = true,
-      file_size_limit = 5242880,
-      allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      file_size_limit = 52428800,
+      allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'];
 
 drop policy if exists "product-images: admin insert" on storage.objects;
 drop policy if exists "product-images: admin update" on storage.objects;

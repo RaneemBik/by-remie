@@ -30,6 +30,16 @@ const toProduct = (row) => {
   };
 };
 
+const defaultHeroSettings = {
+  mode: "default",
+  videos: [],
+};
+
+const toHeroSettings = (row) => ({
+  mode: row?.hero_mode === "video" ? "video" : "default",
+  videos: Array.isArray(row?.hero_videos) ? row.hero_videos.filter(Boolean).map(String) : [],
+});
+
 const friendlyError = (error, fallback) => {
   if (!error) return fallback;
   if (error.code === "23505") return "That name is already in use. Please choose a different name.";
@@ -65,6 +75,7 @@ async function compressImage(file, maxSize = 1600, quality = 0.85) {
 export function StoreProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [heroSettings, setHeroSettings] = useState(defaultHeroSettings);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -83,14 +94,28 @@ export function StoreProvider({ children }) {
     setLoading(false);
   }, []);
 
+  const loadHeroSettings = useCallback(async () => {
+    const { data, error } = await supabase.from("site_settings").select("*").maybeSingle();
+    if (error && error.code !== "PGRST116") {
+      console.error("Hero settings could not be loaded:", error.message);
+      setHeroSettings(defaultHeroSettings);
+      return;
+    }
+    setHeroSettings(toHeroSettings(data || defaultHeroSettings));
+  }, []);
+
   useEffect(() => {
     load();
+    loadHeroSettings();
     // Reload when someone signs in/out: admins can also see Trash.
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") setTimeout(load, 0);
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        setTimeout(load, 0);
+        setTimeout(loadHeroSettings, 0);
+      }
     });
     return () => sub.subscription.unsubscribe();
-  }, [load]);
+  }, [load, loadHeroSettings]);
 
   const products = useMemo(() => allProducts.filter((p) => !p.deletedAt), [allProducts]);
   const trash = useMemo(
@@ -248,10 +273,35 @@ export function StoreProvider({ children }) {
     [featuredIds],
   );
 
+  const saveHeroSettings = useCallback(async (nextSettings) => {
+    const mode = nextSettings?.mode === "video" ? "video" : "default";
+    const videos = Array.isArray(nextSettings?.videos)
+      ? nextSettings.videos.map((item) => String(item).trim()).filter(Boolean)
+      : [];
+
+    const { data, error } = await supabase
+      .from("site_settings")
+      .upsert(
+        { id: "main", hero_mode: mode, hero_videos: videos },
+        { onConflict: "id" },
+      )
+      .select()
+      .single();
+
+    if (error) {
+      return { ok: false, message: friendlyError(error, "The hero settings could not be saved.") };
+    }
+
+    setHeroSettings(toHeroSettings(data));
+    return { ok: true };
+  }, []);
+
   const value = {
     loading,
     loadError,
     reload: load,
+    heroSettings,
+    saveHeroSettings,
     categories,
     products,
     trash,

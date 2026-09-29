@@ -146,7 +146,7 @@ export default function AdminUsers() {
               const canEditRole = isSuperAdmin && !isSelf;
               return (
                 <div key={admin.email} className="border border-[#352820]/10 rounded-lg p-3 sm:p-4 bg-white/80">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <p className="font-medium text-[#352820] break-all">{admin.email}</p>
                       <p className="text-xs text-[#352820]/55 mt-1">
@@ -160,12 +160,12 @@ export default function AdminUsers() {
                         {isSuper ? "Super admin" : "Admin"}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
                       {pending && (
                         <button
                           type="button"
                           onClick={() => handleResend(admin.email)}
-                          className="text-[#a77c67] text-[11px] tracking-[.18em] uppercase hover:text-[#352820]"
+                          className="w-full text-left text-[#a77c67] text-[11px] tracking-[.18em] uppercase hover:text-[#352820] sm:w-auto sm:text-right"
                         >
                           Resend
                         </button>
@@ -175,7 +175,7 @@ export default function AdminUsers() {
                         <select
                           value={admin.role || "admin"}
                           onChange={(e) => handleRoleChange(admin.email, e.target.value)}
-                          className="text-[10px] tracking-[.14em] uppercase border border-[#352820]/15 rounded px-2 py-1 bg-white outline-none"
+                          className="w-full border border-[#352820]/15 rounded px-2 py-2 bg-white outline-none text-[10px] tracking-[.14em] uppercase sm:w-auto"
                           aria-label={`Change role for ${admin.email}`}
                         >
                           <option value="admin">Admin</option>
@@ -187,7 +187,7 @@ export default function AdminUsers() {
                         <button
                           type="button"
                           onClick={() => handleRemove(admin.email)}
-                          className="inline-flex items-center gap-2 text-[#a04d42] text-[11px] tracking-[.18em] uppercase hover:text-[#7c372f]"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded border border-[#a04d42]/20 bg-[#fff6f4] px-3 py-2 text-[#a04d42] text-[11px] tracking-[.18em] uppercase hover:text-[#7c372f] sm:w-auto sm:justify-end"
                           aria-label={`Remove ${admin.email}`}
                         >
                           <ShieldOff className="w-3.5 h-3.5" />
