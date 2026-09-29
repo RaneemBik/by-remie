@@ -1,14 +1,16 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ProductArt from "../components/ProductArt";
 import StockBadge from "../components/StockBadge";
 import ProductCard from "../components/ProductCard";
 import { InstagramIcon } from "../components/BrandIcons";
 import { useStore } from "../context/StoreContext";
 
-const instagramUrl = import.meta.env.VITE_INSTAGRAM_URL || "https://www.instagram.com/";
+const instagramUrl = (import.meta.env.VITE_INSTAGRAM_URL || "https://www.instagram.com/").split("?")[0].replace(/\/+$/, "");
+const instagramUsername = (instagramUrl.match(/instagram\.com\/([^/?]+)/i) || [])[1] || "";
+const instagramDmUrl = instagramUsername ? `https://ig.me/m/${instagramUsername}` : instagramUrl;
 const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
 
 export default function ProductDetail() {
@@ -16,6 +18,20 @@ export default function ProductDetail() {
   const { products, categories, loading } = useStore();
   const [imageIndex, setImageIndex] = useState(0);
   const product = products.find((p) => p.id === id);
+  const initialSelectedVariants = useMemo(() => {
+    const defaults = {};
+    if (!product?.variants) return defaults;
+    product.variants.forEach((group) => {
+      const first = group.values?.[0]?.label;
+      if (first) defaults[group.name] = first;
+    });
+    return defaults;
+  }, [product]);
+  const [selectedVariants, setSelectedVariants] = useState(initialSelectedVariants);
+
+  useEffect(() => {
+    setSelectedVariants(initialSelectedVariants);
+  }, [initialSelectedVariants]);
 
   if (loading) return <div className="max-w-6xl mx-auto px-5 md:px-8 py-24 text-center text-sm text-ink-800/50">Loading…</div>;
 
@@ -35,6 +51,31 @@ export default function ProductDetail() {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 3);
 
+  const variantGroups = Array.isArray(product.variants) ? product.variants : [];
+  const defaultSelections = initialSelectedVariants;
+
+  const variantImageList = useMemo(() => {
+    const images = [];
+
+    variantGroups.forEach((group) => {
+      const selectedValue = selectedVariants[group.name] || group.values?.[0]?.label || "";
+      const option = (group.values || []).find((value) => value.label === selectedValue);
+      const optionImages = Array.isArray(option?.images) ? option.images.filter(Boolean) : option?.image ? [option.image] : [];
+
+      optionImages.forEach((url) => {
+        if (url && !images.includes(url)) images.push(url);
+      });
+    });
+
+    return images.length ? images : (product.images?.length ? product.images : product.image ? [product.image] : []);
+  }, [product.images, product.image, selectedVariants, variantGroups]);
+
+  useEffect(() => {
+    setImageIndex(0);
+  }, [selectedVariants, product.id]);
+
+  const displayImage = variantImageList[imageIndex] || variantImageList[0] || product.image || (product.images?.[0] || "");
+
   const productUrl = typeof window !== "undefined" ? `${window.location.origin}/product/${product.id}` : "";
   const inquiryText = encodeURIComponent(`Hi! I’m interested in this product: ${product.name} - ${productUrl}`);
   const whatsappInquiryUrl = whatsappNumber
@@ -42,19 +83,11 @@ export default function ProductDetail() {
     : `https://wa.me/?text=${inquiryText}`;
 
   const handleInstagramInquiry = () => {
-    if (!productUrl) return;
-
-    const appUrl = `instagram://share?text=${inquiryText}`;
-    const popup = window.open(appUrl, "_blank", "noopener,noreferrer");
-
+    const url = `${instagramDmUrl}?text=${encodeURIComponent(`Hi! I want to ask about this product: ${product.name} - ${productUrl}`)}`;
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
     if (!popup) {
-      window.location.href = appUrl;
-      return;
+      window.location.href = url;
     }
-
-    setTimeout(() => {
-      window.open(instagramUrl, "_blank", "noopener,noreferrer");
-    }, 500);
   };
 
   return (
@@ -74,8 +107,12 @@ export default function ProductDetail() {
           className="aspect-[4/5] rounded-sm overflow-hidden"
         >
           <div className="relative w-full h-full">
-            <ProductArt categoryId={product.categoryId} accent={category?.accent} image={(product.images?.length ? product.images : product.image ? [product.image] : [])[imageIndex] || product.image} />
-            {(product.images?.length || 0) > 1 && <><button onClick={()=>setImageIndex(i=>(i-1+product.images.length)%product.images.length)} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/85 rounded-full p-2 shadow"><ChevronLeft className="w-4 h-4"/></button><button onClick={()=>setImageIndex(i=>(i+1)%product.images.length)} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/85 rounded-full p-2 shadow"><ChevronRight className="w-4 h-4"/></button><div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">{product.images.map((_,i)=><button key={i} onClick={()=>setImageIndex(i)} aria-label={`Show image ${i+1}`} className={`w-2 h-2 rounded-full ${i===imageIndex?"bg-[#352820]":"bg-white/80"}`}/>)}</div></>}
+            <ProductArt
+              categoryId={product.categoryId}
+              accent={category?.accent}
+              image={displayImage}
+            />
+            {(variantImageList.length > 1) && <><button onClick={()=>setImageIndex(i=>(i-1+variantImageList.length)%variantImageList.length)} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/85 rounded-full p-2 shadow"><ChevronLeft className="w-4 h-4"/></button><button onClick={()=>setImageIndex(i=>(i+1)%variantImageList.length)} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/85 rounded-full p-2 shadow"><ChevronRight className="w-4 h-4"/></button><div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">{variantImageList.map((_,i)=><button key={i} onClick={()=>setImageIndex(i)} aria-label={`Show image ${i+1}`} className={`w-2 h-2 rounded-full ${i===imageIndex?"bg-[#352820]":"bg-white/80"}`}/>)}</div></>}
           </div>
         </motion.div>
 
@@ -93,6 +130,33 @@ export default function ProductDetail() {
           <p className="text-ink-800/65 leading-relaxed max-w-md">
             {product.description}
           </p>
+
+          {Array.isArray(product.variants) && product.variants.length > 0 && (
+            <div className="mt-8 space-y-4">
+              {product.variants.map((group, index) => (
+                <div key={`${group.name || "variant"}-${index}`}>
+                  <p className="text-[11px] tracking-widest2 uppercase text-ink-800/50 mb-2">{group.name}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(group.values || []).map((value, valueIndex) => {
+                      const isSelected = (selectedVariants[group.name] || defaultSelections[group.name] || group.values?.[0]?.label) === value.label;
+                      return (
+                        <button
+                          key={`${group.name}-${value.label}-${valueIndex}`}
+                          type="button"
+                          onClick={() => setSelectedVariants((prev) => ({ ...prev, [group.name]: value.label }))}
+                          className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                            isSelected ? "border-[#352820] bg-[#352820] text-white" : "border-ink-800/15 bg-[#fbf8f4] text-ink-800/75 hover:border-[#a77c67]"
+                          }`}
+                        >
+                          {value.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="mt-8 pt-8 border-t border-ink-800/10">
             <p className="text-sm text-ink-800/50 mb-4">

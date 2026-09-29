@@ -14,6 +14,23 @@ const toCategory = (row) => ({
 
 const toProduct = (row) => {
   const images = Array.isArray(row.images) ? row.images : [];
+  const variants = Array.isArray(row.variants) ? row.variants.filter(Boolean).map((group) => ({
+    name: String(group?.name || "").trim(),
+    values: (Array.isArray(group?.values) ? group.values : []).map((value) => {
+      if (typeof value === "string") return { label: value.trim(), image: "", images: [] };
+      if (value && typeof value === "object") {
+        const rawImages = Array.isArray(value.images) ? value.images : [];
+        const singleImage = String(value.image || value.imageUrl || "").trim();
+        const finalImages = rawImages.length ? rawImages.filter(Boolean).map(String) : (singleImage ? [singleImage] : []);
+        return {
+          label: String(value?.label || value?.name || "").trim(),
+          image: finalImages[0] || "",
+          images: finalImages,
+        };
+      }
+      return null;
+    }).filter((value) => value && value.label),
+  })).filter((group) => group.name && group.values.length) : [];
   return {
     id: row.id,
     name: row.name,
@@ -22,6 +39,7 @@ const toProduct = (row) => {
     stock: row.stock,
     quantity: row.quantity,
     description: row.description || "",
+    variants,
     images,
     image: images[0] || "",
     featured: Boolean(row.is_featured),
@@ -196,6 +214,20 @@ export function StoreProvider({ children }) {
     category_id: p.categoryId,
     name: p.name.trim(),
     description: (p.description || "").trim(),
+    variants: (p.variants || []).map((group) => ({
+      name: String(group?.name || "").trim(),
+      values: (Array.isArray(group?.values) ? group.values : []).map((value) => {
+        if (typeof value === "string") return { label: value.trim(), image: "", images: [] };
+        const images = Array.isArray(value?.images) ? value.images.filter(Boolean).map(String) : [];
+        const singleImage = String(value?.image || value?.imageUrl || "").trim();
+        const finalImages = images.length ? images : (singleImage ? [singleImage] : []);
+        return {
+          label: String(value?.label || value?.name || "").trim(),
+          image: finalImages[0] || "",
+          images: finalImages,
+        };
+      }).filter((value) => value && value.label),
+    })).filter((group) => group.name && group.values.length),
     price: Number(p.price),
     stock: p.stock,
     quantity: Math.max(0, Math.floor(Number(p.quantity) || 0)),

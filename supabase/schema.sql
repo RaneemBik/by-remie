@@ -144,6 +144,7 @@ create table if not exists public.products (
   category_id  uuid not null references public.categories (id) on delete cascade,
   name         text not null check (char_length(btrim(name)) between 1 and 160),
   description  text not null default '' check (char_length(description) <= 4000),
+  variants     jsonb not null default '[]'::jsonb,
   price        numeric(10, 2) not null check (price >= 0),
   stock        text not null default 'in' check (stock in ('in', 'low', 'out')),
   quantity     integer not null default 0 check (quantity >= 0),

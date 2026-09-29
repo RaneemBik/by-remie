@@ -7,7 +7,9 @@ import StockBadge from "./StockBadge";
 import { InstagramIcon } from "./BrandIcons";
 import { useStore } from "../context/StoreContext";
 
-const instagramUrl = import.meta.env.VITE_INSTAGRAM_URL || "https://www.instagram.com/";
+const instagramUrl = (import.meta.env.VITE_INSTAGRAM_URL || "https://www.instagram.com/").split("?")[0].replace(/\/+$/, "");
+const instagramUsername = (instagramUrl.match(/instagram\.com\/([^/?]+)/i) || [])[1] || "";
+const instagramDmUrl = instagramUsername ? `https://ig.me/m/${instagramUsername}` : instagramUrl;
 const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
 
 export default function ProductCard({ product, index = 0 }) {
@@ -22,20 +24,13 @@ export default function ProductCard({ product, index = 0 }) {
   const whatsappShareUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
 
   const handleInstagramShare = () => {
-    if (!productUrl) return;
+    if (!instagramUsername) return;
+    const url = `${instagramDmUrl}?text=${encodeURIComponent(`Hi! I want to ask about this product: ${product.name} - ${productUrl}`)}`;
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
 
-    const appUrl = `instagram://share?text=${encodedMessage}`;
-    const fallback = instagramUrl;
-
-    const popup = window.open(appUrl, "_blank", "noopener,noreferrer");
     if (!popup) {
-      window.location.href = appUrl;
-      return;
+      window.location.href = url;
     }
-
-    setTimeout(() => {
-      window.open(fallback, "_blank", "noopener,noreferrer");
-    }, 500);
   };
 
   return (

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { InstagramIcon } from "./BrandIcons";
-const instagramUrl = import.meta.env.VITE_INSTAGRAM_URL || "https://www.instagram.com/";
+const instagramUrl = (import.meta.env.VITE_INSTAGRAM_URL || "https://www.instagram.com/").split("?")[0].replace(/\/+$/, "");
 const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
 const whatsappUrl = whatsappNumber
   ? `https://wa.me/${whatsappNumber}`
