@@ -141,6 +141,20 @@ export function AuthProvider({ children }) {
     return { ok: result.ok, message: result.message || "If that email belongs to an admin, a link has been sent." };
   }, []);
 
+  const changePassword = useCallback(async (newPassword) => {
+    const password = String(newPassword || "").trim();
+    if (password.length < 8) {
+      return { ok: false, message: "Password must be at least 8 characters." };
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    if (updateError) {
+      return { ok: false, message: updateError.message || "The password could not be updated." };
+    }
+
+    return { ok: true, message: "Password updated successfully." };
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -157,6 +171,7 @@ export function AuthProvider({ children }) {
         updateAdminRole,
         removeAdmin,
         requestPasswordReset,
+        changePassword,
       }}
     >
       {children}

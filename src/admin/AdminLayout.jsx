@@ -17,7 +17,7 @@ export default function AdminLayout() {
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/categories" className={linkClass}><Tags className="w-4 h-4" /> Categories</NavLink>
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/featured" className={linkClass}><Star className="w-4 h-4" /> Featured</NavLink>
         <NavLink onClick={() => setSidebarOpen(false)} to="/admin/trash" className={linkClass}><Trash2 className="w-4 h-4" /> Trash</NavLink>
-        <NavLink onClick={() => setSidebarOpen(false)} to="/admin/users" className={linkClass}><ShieldCheck className="w-4 h-4" /> Admin users</NavLink>
+        <NavLink onClick={() => setSidebarOpen(false)} to="/admin/users" className={linkClass}><ShieldCheck className="w-4 h-4" /> Account</NavLink>
       </nav>
       <div className="p-3 sm:p-4 border-t border-[#352820]/10 space-y-1">
         <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-[#352820]/70 hover:bg-[#f4eee8]"><ExternalLink className="w-4 h-4" /> View storefront</Link>
